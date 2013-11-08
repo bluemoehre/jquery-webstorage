@@ -17,7 +17,7 @@ Requirements
 How to use
 ----------
 
-All Examples are given with `sessionStorage` and can be used the same way with `localStorage`.
+All examples are given with `sessionStorage` and can be used in the same way with `localStorage`.
 Remember that `localStorage` will store kinda forever while `sessionStorage` will forget its data when the browser's tab was closed.
 
 ```javascript
@@ -67,11 +67,15 @@ $.sessionStorage.get('myNamespace', 'myObject');
 
 // remove a single value
 $.sessionStorage.del('myList');
-
-// is the same like
+// or
 $.sessionStorage.set('myList', null);
 
-// remove a complete namespace
+// remove a single value from namespace
+$.sessionStorage.del('myNamespace', 'myObject');
+// or
+$.sessionStorage.set('myNamespace', 'myObject', null);
+
+// remove a complete namespace and everything inside
 $.sessionStorage.clear('theirNamespace');
 
 // remove everything in the storage

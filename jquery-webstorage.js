@@ -11,7 +11,7 @@
     'use strict';
 
     var SEPARATOR = ':';
-    var ERR_SEPERATOR_IN_KEY = '"'+SEPARATOR+'" is not allows as key due it is used as namespace separator';
+    var ERR_SEPERATOR_IN_KEY = 'Usage of "'+SEPARATOR+'" is not allowed in key due it is used as namespace separator';
     var noop = { get: function(){ return null; }, set: $.noop, del: $.noop, clear: $.noop };
     var debug = new Debug('jQuery.webstorage');
     debug.level = Debug.DEBUG_LOG;

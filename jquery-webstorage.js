@@ -100,9 +100,13 @@
     function clear(storage, namespace){
         debug.log('clear called with', arguments);
         if (namespace){
+        	var keysToRemove = [];
             for (var i=0; i < win[storage].length; i++){
                 var key = win[storage].key(i);
-                if (key.indexOf(namespace) == 0) win[storage].removeItem(key);
+                if (key.indexOf(namespace + SEPARATOR) == 0) keysToRemove.push(key);
+            }
+            for (var i=0; i < keysToRemove.length; i++){
+            	win[storage].removeItem(keysToRemove[i]);
             }
         } else {
             win[storage].clear();

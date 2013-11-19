@@ -6,20 +6,28 @@
  */
 
 // use window as local variable due to performance improvement
-(function($, win, undefined) {
+(function($, win) {
 
     'use strict';
 
+    /**
+     * Namespace separator
+     * @type {string}
+     */
     var SEPARATOR = ':';
+    /**
+     * @type string
+     */
     var ERR_SEPERATOR_IN_KEY = 'Usage of "'+SEPARATOR+'" is not allowed in key due it is used as namespace separator';
+    /**
+     * @type {object}
+     */
     var noop = { get: function(){ return null; }, set: $.noop, del: $.noop, clear: $.noop };
-    var debug = new Debug('jQuery.webstorage');
-    debug.level = Debug.DEBUG_LOG;
 
     /**
      * Validates key
      * @throws Exception
-     * @returns void
+     * @returns {undefined}
      */
     function validateKey(key){
         if (!key.indexOf(SEPARATOR) < 0) throw ERR_SEPERATOR_IN_KEY;
@@ -27,7 +35,7 @@
 
     /**
      * Prepends namespace string to key if present
-     * @returns String
+     * @returns {string}
      */
     function prefixKey(key, namespace){
         return (namespace ? namespace + SEPARATOR : '') + key;
@@ -35,7 +43,7 @@
 
     /**
      * Merge storage and arguments to an array
-     * @returns array
+     * @returns {array}
      */
     function buildArgs(stor,args){
         return [stor].concat(Array.prototype.slice.call(args, 0));
@@ -43,34 +51,32 @@
 
     /**
      * Returns a value from a storage
-     * @param String storage
-     * @param String namespace (optional)
-     * @param String key
-     * @returns Mixed
+     * @param {string} storage
+     * @param {string} [namespace]
+     * @param {string} key
+     * @returns {*}
      */
-    function get(){
-        debug.log('get called with', arguments);
-        var storage = arguments[0];
-        var key = arguments[arguments.length-1];
-        var namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
+    function get(storage, namespace, key){
+        storage = arguments[0];
+        key = arguments[arguments.length-1];
+        namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
         validateKey(key);
         return JSON.parse(win[storage].getItem(prefixKey(key,namespace)));
     }
 
     /**
      * Saves a value to a storage
-     * @param String storage
-     * @param String namespace (optional)
-     * @param String key
-     * @param Mixed value
-     * @returns void
+     * @param {string} storage
+     * @param {string} [namespace]
+     * @param {string} key
+     * @param {*} value
+     * @returns {undefined}
      */
-    function set(){
-        debug.log('set called with', arguments);
-        var storage = arguments[0];
-        var val = arguments[arguments.length-1];
-        var key = arguments[arguments.length-2];
-        var namespace = arguments.length > 3 ? arguments[arguments.length-3] : null;
+    function set(storage, namespace, key, value){
+        storage = arguments[0];
+        val = arguments[arguments.length-1];
+        key = arguments[arguments.length-2];
+        namespace = arguments.length > 3 ? arguments[arguments.length-3] : null;
         validateKey(key);
         if (val === null) return win[storage].removeItem(prefixKey(key,namespace));
         win[storage].setItem(prefixKey(key,namespace), JSON.stringify(val));
@@ -78,27 +84,25 @@
 
     /**
      * Removes a value from a storage
-     * @param String storage
-     * @param String namespace (optional)
-     * @param String key
+     * @param {string} storage
+     * @param {string} [namespace]
+     * @param {string} key
      * @returns void
      */
-    function del(){
-        debug.log('del called with', arguments);
-        var storage = arguments[0];
-        var key = arguments[arguments.length-1];
-        var namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
+    function del(storage, namespace, key){
+        storage = arguments[0];
+        key = arguments[arguments.length-1];
+        namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
         validateKey(key);
         win[storage].removeItem(prefixKey(key,namespace));
     }
 
     /**
      * Clears the complete storage or just a namespace
-     * @param storage
-     * @param namespace (optional)
+     * @param {string} storage
+     * @param {string} [namespace]
      */
     function clear(storage, namespace){
-        debug.log('clear called with', arguments);
         if (namespace){
         	var keysToRemove = [];
             for (var i=0; i < win[storage].length; i++){
@@ -127,7 +131,7 @@
                 del.apply(null,  buildArgs('sessionStorage', arguments));
             },
             clear: function(){
-                return clear.apply(null,  buildArgs('sessionStorage', arguments));
+                return clear.apply(null, buildArgs('sessionStorage', arguments));
             }
         };
 

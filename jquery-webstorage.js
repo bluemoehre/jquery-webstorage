@@ -74,12 +74,12 @@
      */
     function set(storage, namespace, key, value){
         storage = arguments[0];
-        val = arguments[arguments.length-1];
+        value = arguments[arguments.length-1];
         key = arguments[arguments.length-2];
         namespace = arguments.length > 3 ? arguments[arguments.length-3] : null;
         validateKey(key);
-        if (val === null) return win[storage].removeItem(prefixKey(key,namespace));
-        win[storage].setItem(prefixKey(key,namespace), JSON.stringify(val));
+        if (value === null) return win[storage].removeItem(prefixKey(key,namespace));
+        win[storage].setItem(prefixKey(key,namespace), JSON.stringify(value));
     }
 
     /**

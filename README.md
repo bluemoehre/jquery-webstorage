@@ -81,16 +81,3 @@ $.sessionStorage.clear('theirNamespace');
 // remove everything in the storage
 $.sessionStorage.clear();
 ```
-
-
-Important
----------
-
-Firefox still raises an exception when using `set()` in private mode. So please use a try-catch block!
-```javascript
-try {
-	$.sessionStorage.set('namespace', 'key', 'value');
-} catch (e){
-	// do nothing
-}
-```

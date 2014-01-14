@@ -5,24 +5,22 @@
  * @link http://www.github.com/bluemoehre
  */
 
-// use window as local variable due to performance improvement
+// use window and document as local variables due to performance improvement
 (function($, win) {
 
     'use strict';
 
     /**
-     * Namespace separator
+     * Separator between namespace and key
+     * You can change it to whatever u need
      * @type {string}
      */
     var SEPARATOR = ':';
     /**
-     * @type string
+     * Error for separator conflict in key name
+     * @type {string}
      */
-    var ERR_SEPERATOR_IN_KEY = 'Usage of "'+SEPARATOR+'" is not allowed in key due it is used as namespace separator';
-    /**
-     * @type {object}
-     */
-    var noop = { get: function(){ return null; }, set: $.noop, del: $.noop, clear: $.noop };
+    var ERR_SEPERATOR_IN_KEY = '"'+ SEPARATOR +'" is not allows as key due it is used as namespace separator';
 
     /**
      * Validates key
@@ -35,6 +33,8 @@
 
     /**
      * Prepends namespace string to key if present
+     * @param {string} key
+     * @param {string} namespace
      * @returns {string}
      */
     function prefixKey(key, namespace){
@@ -43,9 +43,11 @@
 
     /**
      * Merge storage and arguments to an array
+     * @param {string} stor
+     * @param {array} args
      * @returns {array}
      */
-    function buildArgs(stor,args){
+    function buildArgs(stor, args){
         return [stor].concat(Array.prototype.slice.call(args, 0));
     }
 
@@ -78,8 +80,8 @@
         key = arguments[arguments.length-2];
         namespace = arguments.length > 3 ? arguments[arguments.length-3] : null;
         validateKey(key);
-        if (value === null) return win[storage].removeItem(prefixKey(key,namespace));
-        win[storage].setItem(prefixKey(key,namespace), JSON.stringify(value));
+        if (value === null) return win[storage].removeItem(prefixKey(key, namespace));
+        win[storage].setItem(prefixKey(key, namespace), JSON.stringify(value));
     }
 
     /**
@@ -87,14 +89,14 @@
      * @param {string} storage
      * @param {string} [namespace]
      * @param {string} key
-     * @returns void
+     * @returns {undefined}
      */
     function del(storage, namespace, key){
         storage = arguments[0];
         key = arguments[arguments.length-1];
         namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
         validateKey(key);
-        win[storage].removeItem(prefixKey(key,namespace));
+        win[storage].removeItem(prefixKey(key, namespace));
     }
 
     /**
@@ -104,13 +106,13 @@
      */
     function clear(storage, namespace){
         if (namespace){
-        	var keysToRemove = [];
+          var keysToRemove = [];
             for (var i=0; i < win[storage].length; i++){
                 var key = win[storage].key(i);
                 if (key.indexOf(namespace + SEPARATOR) == 0) keysToRemove.push(key);
             }
             for (var i=0; i < keysToRemove.length; i++){
-            	win[storage].removeItem(keysToRemove[i]);
+              win[storage].removeItem(keysToRemove[i]);
             }
         } else {
             win[storage].clear();
@@ -118,40 +120,45 @@
     }
 
 
-
-    if ('sessionStorage' in window && 'localStorage' in window && 'JSON' in window){
+    // If dependencies are not met register empty functions to not break the rest of the code
+    if ('sessionStorage' in win && 'localStorage' in win && 'JSON' in win){
         $.sessionStorage = {
-            set: function(){
-                set.apply(null, buildArgs('sessionStorage', arguments));
-            },
             get: function(){
                 return get.apply(null, buildArgs('sessionStorage', arguments));
             },
+            set: function(){
+                set.apply(null, buildArgs('sessionStorage', arguments));
+            },
             del: function(){
-                del.apply(null,  buildArgs('sessionStorage', arguments));
+                del.apply(null, buildArgs('sessionStorage', arguments));
             },
             clear: function(){
-                return clear.apply(null, buildArgs('sessionStorage', arguments));
+                clear.apply(null, buildArgs('sessionStorage', arguments));
             }
         };
 
         $.localStorage = {
-            set: function(){
-                set.apply(null, buildArgs('localStorage', arguments));
-            },
             get: function(){
                 return get.apply(null, buildArgs('localStorage', arguments));
+            },
+            set: function(){
+                set.apply(null, buildArgs('localStorage', arguments));
             },
             del: function(){
                 del.apply(null, buildArgs('localStorage', arguments));
             },
             clear: function(){
-                return clear.apply(null, buildArgs('localStorage', arguments));
+                clear.apply(null, buildArgs('localStorage', arguments));
             }
         };
     }
     else {
-        $.sessionStorage = $.localStorage = noop;
+        $.sessionStorage = $.localStorage = {
+            get: function(){ return null; },
+            set: $.noop,
+            del: $.noop,
+            clear: $.noop
+        };
     }
 
 })(jQuery, window);

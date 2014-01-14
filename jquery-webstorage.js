@@ -161,4 +161,10 @@
         };
     }
 
+    // Alias
+    $.webStorage = {
+        session: $.sessionStorage,
+        local: $.localStorage
+    };
+
 })(jQuery, window);

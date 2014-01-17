@@ -14,6 +14,13 @@ Requirements
 - Webstorage-Support (nativly on Internet Explorer 8+, Firefox 3.5+, Safari 4+, Chrome 4+, Opera 10.5+)
 
 
+Upcoming
+--------
+[ ] General event handlers
+[ ] Event handlers based on namespaces
+[ ] Workaround for Internet Explorer's misbehaviour with the storage event
+
+
 How to use
 ----------
 

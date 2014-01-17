@@ -16,9 +16,9 @@ Requirements
 
 Upcoming
 --------
-[ ] General event handlers
-[ ] Event handlers based on namespaces
-[ ] Workaround for Internet Explorer's misbehaviour with the storage event
+- General event handlers
+- Event handlers based on namespaces
+- Workaround for Internet Explorer's misbehaviour with the storage event
 
 
 How to use

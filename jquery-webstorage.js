@@ -16,11 +16,13 @@
      * @type {string}
      */
     var SEPARATOR = ':';
+
     /**
      * Error for separator conflict in key name
      * @type {string}
      */
     var ERR_SEPARATOR_IN_KEY = '"'+SEPARATOR+'" is not allowed in key due it is used as namespace separator';
+
     /**
      * Collection of jQuery event listeners for each storage
      * @type {{localStorage: (jQuery), sessionStorage: (jQuery)}}
@@ -28,7 +30,77 @@
     var eventHandlers = { localStorage: $({}), sessionStorage: $({}) };
 
     /**
+     * Hashes of key value paris for IE workaround
+     * @see https://connect.microsoft.com/IE/feedback/details/774798/localstorage-event-fired-in-source-window
+     * @type {Array}
+     */
+    var ieCrutchHashes = [];
+
+    /**
+     * Adds a number to the hash list for later testing
+     * @see https://connect.microsoft.com/IE/feedback/details/774798/localstorage-event-fired-in-source-window
+     * @param {string} key
+     * @param {string} data
+     */
+    function addIeCrutch(key, data){
+        // remove all entries for same key
+        var i = 0;
+        for (; i < ieCrutchHashes.length; i++){
+            if (ieCrutchHashes[i].key == key){
+                ieCrutchHashes.splice(i, 1);
+                i--;
+            }
+        }
+        // limit hash count to 100
+        if (i > 99){
+            ieCrutchHashes.splice(0, i - 99);
+        }
+
+        ieCrutchHashes.push({ key: key, val: hashString(data + '') });
+    }
+
+    /**
+     * Tests if a hash is on the hash list
+     * @param {string} key
+     * @param {string} data
+     * @returns {boolean}
+     */
+    function isIeCrutch(key, data){
+        for (var i = 0; i < ieCrutchHashes.length; i++){
+            if (ieCrutchHashes[i].key == key && ieCrutchHashes[i].val == hashString(data + '')) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Hashes a string to a small (negative) number
+     * @param {string} string
+     * @return {number}
+     */
+    function hashString(string){
+        var hash = 0;
+        // faster version (IE9+)
+        if (Array.prototype.reduce){
+            return parseInt(string.split('').reduce(function(hash, string){
+                hash = ((hash << 5) - hash) + string.charCodeAt(0);
+                return hash & hash;
+            }, 0));
+        // slower version (browsers without Array.prototype.reduce)
+        } else {
+            var char;
+            if (string.length === 0) return hash;
+            for (var i = 0; i < string.length; i++) {
+                char  = string.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+        }
+        return hash;
+    }
+
+    /**
      * Validates key
+     * @param {string} key
      * @throws Exception
      * @returns {undefined}
      */
@@ -48,12 +120,12 @@
 
     /**
      * Merge storage and arguments to an array
-     * @param {string} stor
+     * @param {string} storage
      * @param {Array} args
      * @returns {Array}
      */
-    function buildArgs(stor, args){
-        return [stor].concat(Array.prototype.slice.call(args, 0));
+    function buildArgs(storage, args){
+        return [storage].concat(Array.prototype.slice.call(args, 0));
     }
 
     /**
@@ -85,8 +157,15 @@
         key = arguments[arguments.length-2];
         namespace = arguments.length > 3 ? arguments[arguments.length-3] : null;
         validateKey(key);
-        if (value === null) return win[storage].removeItem(prefixKey(key, namespace));
-        win[storage].setItem(prefixKey(key, namespace), JSON.stringify(value));
+        key = prefixKey(key, namespace);
+        if (value === null){
+            addIeCrutch(key, '');
+            win[storage].removeItem(key);
+        } else {
+            value = JSON.stringify(value);
+            addIeCrutch(key, value);
+            win[storage].setItem(key, value);
+        }
     }
 
     /**
@@ -101,7 +180,9 @@
         key = arguments[arguments.length-1];
         namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
         validateKey(key);
-        win[storage].removeItem(prefixKey(key, namespace));
+        key = prefixKey(key,namespace);
+        addIeCrutch(key, '');
+        win[storage].removeItem(key);
     }
 
     /**
@@ -118,51 +199,53 @@
                 if (key.indexOf(namespace + SEPARATOR) == 0) keysToRemove.push(key);
             }
             for (i = 0; i < keysToRemove.length; i++){
+                addIeCrutch(keysToRemove[i], '');
                 win[storage].removeItem(keysToRemove[i]);
             }
         } else {
+            ieCrutchHashes = [];
             win[storage].clear();
         }
     }
 
     /**
-     * Binds a function for the specified events (jQuery like)
-     * @param {string} stor
-     * @param {string} evt
-     * @param {function} fn
+     * Binds a function for the specified events (jQuery-like)
+     * @param {string} storage
+     * @param {string} event
+     * @param {function} handler
      */
-    function on(stor, evt, fn){
-        eventHandlers[stor].on(evt, fn);
+    function on(storage, event, handler){
+        eventHandlers[storage].on(event, handler);
     }
 
     /**
-     * Unbinds a function for the specified events (jQuery like)
-     * @param {string} stor
-     * @param {string} evt
-     * @param {function} [fn]
+     * Unbinds a function for the specified events (jQuery-like)
+     * @param {string} storage
+     * @param {string} event
+     * @param {function} [handler]
      */
-    function off(stor, evt, fn){
-        eventHandlers[stor].off(evt, fn);
+    function off(storage, event, handler){
+        eventHandlers[storage].off(event, handler);
     }
 
     /**
-     * Binds a function for the specified events once (jQuery like)
-     * @param {string} stor
-     * @param {string} evt
-     * @param {function} [fn]
+     * Binds a function for the specified events once (jQuery-like)
+     * @param {string} storage
+     * @param {string} event
+     * @param {function} [handler]
      */
-    function one(stor, evt, fn){
-        eventHandlers[stor].one(evt, fn);
+    function one(storage, event, handler){
+        eventHandlers[storage].one(event, handler);
     }
 
     /**
-     * Calls all bound event handlers for the specified events (jQuery like)
-     * @param {string} stor
-     * @param {string} evt
+     * Calls all bound event handlers for the specified events (jQuery-like)
+     * @param {string} storage
+     * @param {string} event
      * @param {*} [data]
      */
-    function trigger(stor, evt, data){
-        eventHandlers[stor].trigger(evt, data);
+    function trigger(storage, event, data){
+        eventHandlers[storage].trigger(event, data);
     }
 
 
@@ -182,16 +265,16 @@
             clear: function(){
                 clear.apply(null, buildArgs('sessionStorage', arguments));
             },
-            on: function(evt, fn){
+            on: function(){
                 on.apply(null, buildArgs('sessionStorage', arguments));
             },
-            off: function(evt, fn){
+            off: function(){
                 off.apply(null, buildArgs('sessionStorage', arguments));
             },
-            one: function(evt, fn){
+            one: function(){
                 one.apply(null, buildArgs('sessionStorage', arguments));
             },
-            trigger: function(evt, data){
+            trigger: function(){
                 trigger.apply(null, buildArgs('sessionStorage', arguments));
             }
         };
@@ -209,19 +292,29 @@
             clear: function(){
                 clear.apply(null, buildArgs('localStorage', arguments));
             },
-            on: function(evt, fn){
+            on: function(){
                 on.apply(null, buildArgs('localStorage', arguments));
             },
-            off: function(evt, fn){
+            off: function(){
                 off.apply(null, buildArgs('localStorage', arguments));
             },
-            one: function(evt, fn){
+            one: function(){
                 one.apply(null, buildArgs('localStorage', arguments));
             },
-            trigger: function(evt, data){
+            trigger: function(){
                 trigger.apply(null, buildArgs('localStorage', arguments));
             }
         };
+
+        // Catch native storage event and trigger the plug-in's ones
+        $(win).on('storage', function(event){
+            if (!isIeCrutch(event.originalEvent.key, event.originalEvent.newValue)){
+                $.localStorage.trigger({
+                    type: 'storage',
+                    originalEvent: event.originalEvent
+                });
+            }
+        });
 
     }
 
@@ -246,14 +339,5 @@
         session: $.sessionStorage,
         local: $.localStorage
     };
-
-    // Catch native storage event and trigger the plug-in's ones
-    $(win).on('storage', function(evt){
-        // @todo add IE workaround
-        $.localStorage.trigger({
-            type: 'storage',
-            originalEvent: evt.originalEvent
-        });
-    });
 
 })(jQuery, window);

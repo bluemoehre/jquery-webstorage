@@ -3,7 +3,8 @@ jquery-webstorage
 
 The goal of this plugin is to simplify the use of webstorages (further known as sessionStorage and localStorage):
 - you can store any kind of data types and don't care about conversion
-- you can use namespaces without affecting the storage event's
+- you can use namespaces
+- you can use storage events across different tabs/windows (also on IE =)
 
 
 Requirements
@@ -16,9 +17,7 @@ Requirements
 
 Upcoming
 --------
-- General event handlers
 - Event handlers based on namespaces
-- Workaround for Internet Explorer's misbehaviour with the storage event
 
 
 How to use
@@ -26,6 +25,8 @@ How to use
 
 All examples are given with `sessionStorage` and can be used in the same way with `localStorage`.
 Remember that `localStorage` will store kinda forever while `sessionStorage` will forget its data when the browser's tab was closed.
+
+Additionally there are aliases for both storages: `$.webStorage.local` and `$.webStorage.session`.
 
 ```javascript
 // --- store data ---
@@ -88,3 +89,32 @@ $.sessionStorage.clear('theirNamespace');
 // remove everything in the storage
 $.sessionStorage.clear();
 ```
+
+
+The use of the localStorage will trigger events on other tabs/windows on the same domain which is quite comfortable if
+you need to update local data in intervals. You only need to do one query per browser instead of one per tab/window.
+
+```javascript
+// bind event listener
+$.localStorage.on('storage', function(event){
+    // do something
+
+    // event.originalEvent.key contains the modified storage key (defaults to "key" or "namespace:key")
+    // event.originalEvent.oldValue contains the old value for key (null|JSON)
+    // event.originalEvent.newValue contains the new value for key (null|JSON)
+    // event.originalEvent.storageArea contains the complete dataset of the storage
+}
+
+// trigger event from another tab
+$.localStorage.set('test', {foo: 'bar'});
+
+// Result:
+// event.originalEvent: {
+//     key: "test"
+//     newValue: "1"
+//     oldValue: null
+//     storageArea: {
+//         test: "{"foo":"bar"}"
+//     }
+//     ...
+// }

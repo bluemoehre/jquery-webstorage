@@ -1,4 +1,4 @@
-jquery-webstorage
+jquery-webstorage ![Build Status](https://travis-ci.org/bluemoehre/jquery-webstorage.svg?branch=master)
 =================
 
 The goal of this plugin is to simplify the use of webstorages (further known as sessionStorage and localStorage):

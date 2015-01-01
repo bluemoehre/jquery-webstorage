@@ -1,0 +1,32 @@
+{
+  "name": "jquery-webstorage",
+  "version": "0.8.0",
+  "description": "jQuery plugin to simplify working with localStorage and sessionStorage",
+  "main": "src/jquery-webstorage.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "grunt test --verbose --force"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluemoehre/jquery-webstorage.git"
+  },
+  "keywords": [
+    "jquery",
+    "webstorage",
+    "localstorage",
+    "sessionstorage"
+  ],
+  "author": "bluemoehre",
+  "license": "GPL 2",
+  "bugs": {
+    "url": "https://github.com/bluemoehre/jquery-webstorage/issues"
+  },
+  "homepage": "https://github.com/bluemoehre/jquery-webstorage",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-qunit": "^0.5.2"
+  }
+}

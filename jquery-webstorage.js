@@ -1,12 +1,12 @@
 /**
  * @license GNU General Public License v2 http://www.gnu.org/licenses/gpl-2.0
  * @author BlueMöhre <bluemoehre@gmx.de>
- * @copyright 2013 BlueMöhre
+ * @copyright 2013-2014 BlueMöhre
  * @link http://www.github.com/bluemoehre
  */
 
 // use window and document as local variables due to performance improvement
-(function($, win) {
+(function ($, win) {
 
     'use strict';
 
@@ -21,13 +21,19 @@
      * Error for separator conflict in key name
      * @type {string}
      */
-    var ERR_SEPARATOR_IN_KEY = '"'+SEPARATOR+'" is not allowed in key due it is used as namespace separator';
+    var ERR_SEPARATOR_IN_KEY = '"' + SEPARATOR + '" is not allowed in key due it is used as namespace separator';
+
+    /**
+     * Prevent webstorage security exceptions which can be caused by disabled cookies
+     * @type {boolean}
+     */
+    var CATCH_SECURITY_EXCEPTIONS = true;
 
     /**
      * Collection of jQuery event listeners for each storage
      * @type {{localStorage: (jQuery), sessionStorage: (jQuery)}}
      */
-    var eventHandlers = { localStorage: $({}), sessionStorage: $({}) };
+    var eventHandlers = {localStorage: $({}), sessionStorage: $({})};
 
     /**
      * Hashes of key value paris for IE workaround
@@ -42,21 +48,21 @@
      * @param {string} key
      * @param {string} data
      */
-    function addIeCrutch(key, data){
+    function addIeCrutch(key, data) {
         // remove all entries for same key
-        var i = 0;
-        for (; i < ieCrutchHashes.length; i++){
-            if (ieCrutchHashes[i].key == key){
+        var i;
+        for (i = 0; i < ieCrutchHashes.length; i++) {
+            if (ieCrutchHashes[i].key === key) {
                 ieCrutchHashes.splice(i, 1);
                 i--;
             }
         }
         // limit hash count to 100
-        if (i > 99){
+        if (i > 99) {
             ieCrutchHashes.splice(0, i - 99);
         }
 
-        ieCrutchHashes.push({ key: key, val: hashString(data + '') });
+        ieCrutchHashes.push({key: key, val: hashString(data + '')});
     }
 
     /**
@@ -65,9 +71,10 @@
      * @param {string} data
      * @returns {boolean}
      */
-    function isIeCrutch(key, data){
-        for (var i = 0; i < ieCrutchHashes.length; i++){
-            if (ieCrutchHashes[i].key == key && ieCrutchHashes[i].val == hashString(data + '')) return true;
+    function isIeCrutch(key, data) {
+        var i;
+        for (i = 0; i < ieCrutchHashes.length; i++) {
+            if (ieCrutchHashes[i].key === key && ieCrutchHashes[i].val === hashString(data + '')) return true;
         }
         return false;
     }
@@ -77,20 +84,22 @@
      * @param {string} string
      * @return {number}
      */
-    function hashString(string){
+    function hashString(string) {
         var hash = 0;
         // faster version (IE9+)
-        if (Array.prototype.reduce){
-            return parseInt(string.split('').reduce(function(hash, string){
+        if (Array.prototype.reduce) {
+            return parseInt(string.split('').reduce(function (hash, string) {
                 hash = ((hash << 5) - hash) + string.charCodeAt(0);
                 return hash & hash;
             }, 0));
+
+        }
         // slower version (browsers without Array.prototype.reduce)
-        } else {
+        else {
             var char;
             if (string.length === 0) return hash;
             for (var i = 0; i < string.length; i++) {
-                char  = string.charCodeAt(i);
+                char = string.charCodeAt(i);
                 hash = ((hash << 5) - hash) + char;
                 hash = hash & hash;
             }
@@ -104,8 +113,8 @@
      * @throws Exception
      * @returns {undefined}
      */
-    function validateKey(key){
-        if (!key.indexOf(SEPARATOR) < 0) throw ERR_SEPARATOR_IN_KEY;
+    function validateKey(key) {
+        if (key.indexOf(SEPARATOR) >= 0) throw ERR_SEPARATOR_IN_KEY;
     }
 
     /**
@@ -114,7 +123,7 @@
      * @param {string} namespace
      * @returns {string}
      */
-    function prefixKey(key, namespace){
+    function prefixKey(key, namespace) {
         return (namespace ? namespace + SEPARATOR : '') + key;
     }
 
@@ -124,23 +133,33 @@
      * @param {Array} args
      * @returns {Array}
      */
-    function buildArgs(storage, args){
+    function buildArgs(storage, args) {
         return [storage].concat(Array.prototype.slice.call(args, 0));
     }
 
     /**
      * Returns a value from a storage
+     * If key does not exist or storage is not readable return NULL
      * @param {string} storage
      * @param {string} [namespace]
      * @param {string} key
      * @returns {*}
      */
-    function get(storage, namespace, key){
+    function get(storage, namespace, key) {
+        var value;
+        var prefixedKey;
         storage = arguments[0];
-        key = arguments[arguments.length-1];
-        namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
+        key = arguments[arguments.length - 1];
+        namespace = arguments.length > 2 ? arguments[arguments.length - 2] : null;
         validateKey(key);
-        return JSON.parse(win[storage].getItem(prefixKey(key,namespace)));
+        prefixedKey = prefixKey(key, namespace);
+        try {
+            value = win[storage].getItem(prefixedKey);
+        } catch (e) {
+            if (!CATCH_SECURITY_EXCEPTIONS) throw e;
+            value = null;
+        }
+        return JSON.parse(value);
     }
 
     /**
@@ -151,21 +170,31 @@
      * @param {*} value
      * @returns {undefined}
      */
-    function set(storage, namespace, key, value){
+    function set(storage, namespace, key, value) {
+        var prefixedKey;
         storage = arguments[0];
-        value = arguments[arguments.length-1];
-        key = arguments[arguments.length-2];
-        namespace = arguments.length > 3 ? arguments[arguments.length-3] : null;
+        value = arguments[arguments.length - 1];
+        key = arguments[arguments.length - 2];
+        namespace = arguments.length > 3 ? arguments[arguments.length - 3] : null;
         validateKey(key);
-        key = prefixKey(key, namespace);
-        if (value === null){
-            addIeCrutch(key, '');
-            win[storage].removeItem(key);
+        prefixedKey = prefixKey(key, namespace);
+        if (value === null) {
+            addIeCrutch(prefixedKey, '');
+            try {
+                win[storage].removeItem(prefixedKey);
+            } catch (e) {
+                if (!CATCH_SECURITY_EXCEPTIONS) throw e;
+            }
         } else {
             value = JSON.stringify(value);
-            addIeCrutch(key, value);
-            win[storage].setItem(key, value);
+            addIeCrutch(prefixedKey, value);
+            try {
+                win[storage].setItem(prefixedKey, value);
+            } catch (e) {
+                if (!CATCH_SECURITY_EXCEPTIONS) throw e;
+            }
         }
+
     }
 
     /**
@@ -175,14 +204,19 @@
      * @param {string} key
      * @returns {undefined}
      */
-    function del(storage, namespace, key){
+    function del(storage, namespace, key) {
+        var prefixedKey;
         storage = arguments[0];
-        key = arguments[arguments.length-1];
-        namespace = arguments.length > 2 ? arguments[arguments.length-2] : null;
+        key = arguments[arguments.length - 1];
+        namespace = arguments.length > 2 ? arguments[arguments.length - 2] : null;
         validateKey(key);
-        key = prefixKey(key,namespace);
-        addIeCrutch(key, '');
-        win[storage].removeItem(key);
+        prefixedKey = prefixKey(key, namespace);
+        addIeCrutch(prefixedKey, '');
+        try {
+            win[storage].removeItem(prefixedKey);
+        } catch (e) {
+            if (!CATCH_SECURITY_EXCEPTIONS) throw e;
+        }
     }
 
     /**
@@ -190,15 +224,17 @@
      * @param {string} storage
      * @param {string} [namespace]
      */
-    function clear(storage, namespace){
-        if (namespace){
+    function clear(storage, namespace) {
+        if (namespace) {
             var keysToRemove = [];
             var i;
-            for (i = 0; i < win[storage].length; i++){
+            for (i = 0; i < win[storage].length; i++) {
                 var key = win[storage].key(i);
-                if (key.indexOf(namespace + SEPARATOR) == 0) keysToRemove.push(key);
+                if (key.indexOf(namespace + SEPARATOR) === 0) {
+                    keysToRemove.push(key);
+                }
             }
-            for (i = 0; i < keysToRemove.length; i++){
+            for (i = 0; i < keysToRemove.length; i++) {
                 addIeCrutch(keysToRemove[i], '');
                 win[storage].removeItem(keysToRemove[i]);
             }
@@ -214,7 +250,7 @@
      * @param {string} event
      * @param {function} handler
      */
-    function on(storage, event, handler){
+    function on(storage, event, handler) {
         eventHandlers[storage].on(event, handler);
     }
 
@@ -224,7 +260,7 @@
      * @param {string} event
      * @param {function} [handler]
      */
-    function off(storage, event, handler){
+    function off(storage, event, handler) {
         eventHandlers[storage].off(event, handler);
     }
 
@@ -234,7 +270,7 @@
      * @param {string} event
      * @param {function} [handler]
      */
-    function one(storage, event, handler){
+    function one(storage, event, handler) {
         eventHandlers[storage].one(event, handler);
     }
 
@@ -244,77 +280,77 @@
      * @param {string} event
      * @param {*} [data]
      */
-    function trigger(storage, event, data){
+    function trigger(storage, event, data) {
         eventHandlers[storage].trigger(event, data);
     }
 
 
     // If dependencies are met setup all available functions
-    if ('sessionStorage' in win && 'localStorage' in win && 'JSON' in win){
+    if ('sessionStorage' in win && 'localStorage' in win && 'JSON' in win) {
 
         $.sessionStorage = {
-            get: function(){
+            get: function () {
                 return get.apply(null, buildArgs('sessionStorage', arguments));
             },
-            set: function(){
+            set: function () {
                 set.apply(null, buildArgs('sessionStorage', arguments));
             },
-            del: function(){
+            del: function () {
                 del.apply(null, buildArgs('sessionStorage', arguments));
             },
-            clear: function(){
+            clear: function () {
                 clear.apply(null, buildArgs('sessionStorage', arguments));
             },
-            on: function(){
+            on: function () {
                 on.apply(null, buildArgs('sessionStorage', arguments));
             },
-            off: function(){
+            off: function () {
                 off.apply(null, buildArgs('sessionStorage', arguments));
             },
-            one: function(){
+            one: function () {
                 one.apply(null, buildArgs('sessionStorage', arguments));
             },
-            trigger: function(){
+            trigger: function () {
                 trigger.apply(null, buildArgs('sessionStorage', arguments));
             }
         };
 
         $.localStorage = {
-            get: function(){
+            get: function () {
                 return get.apply(null, buildArgs('localStorage', arguments));
             },
-            set: function(){
+            set: function () {
                 set.apply(null, buildArgs('localStorage', arguments));
             },
-            del: function(){
+            del: function () {
                 del.apply(null, buildArgs('localStorage', arguments));
             },
-            clear: function(){
+            clear: function () {
                 clear.apply(null, buildArgs('localStorage', arguments));
             },
-            on: function(){
+            on: function () {
                 on.apply(null, buildArgs('localStorage', arguments));
             },
-            off: function(){
+            off: function () {
                 off.apply(null, buildArgs('localStorage', arguments));
             },
-            one: function(){
+            one: function () {
                 one.apply(null, buildArgs('localStorage', arguments));
             },
-            trigger: function(){
+            trigger: function () {
                 trigger.apply(null, buildArgs('localStorage', arguments));
             }
         };
 
         // Catch native storage event and trigger the plug-in's ones
-        $(win).on('storage', function(event){
-            if (!isIeCrutch(event.originalEvent.key, event.originalEvent.newValue)){
-                $.localStorage.trigger({
-                    type: 'storage',
-                    originalEvent: event.originalEvent
-                });
-            }
-        });
+        //$(win).on('storage', function (event) {
+        //    if (!isIeCrutch(event.originalEvent.key, event.originalEvent.newValue)) {
+        //        $.localStorage.trigger({
+        //            type: 'storage',
+        //            originalEvent: event.originalEvent
+        //        });
+        //    }
+        //});
 
     }
 
@@ -322,7 +358,9 @@
     else {
 
         $.sessionStorage = $.localStorage = {
-            get: function(){ return null; },
+            get: function () {
+                return null;
+            },
             set: $.noop,
             del: $.noop,
             clear: $.noop,

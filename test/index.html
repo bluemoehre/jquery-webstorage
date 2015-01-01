@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>QUnit</title>
+    <script src="//code.jquery.com/jquery-1.4.min.js"></script>
+    <script src="//code.jquery.com/qunit/qunit-1.16.0.js"></script>
+    <script src="../jquery-webstorage.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.16.0.css">
+</head>
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script>
+        QUnit.test('load a not set key', function(assert) {
+            var key = 'myUndefined';
+            assert.strictEqual($.sessionStorage.get(key), null);
+            assert.strictEqual($.localStorage.get(key), null);
+        });
+
+        QUnit.test('save & load a boolean', function(assert) {
+            var key = 'myTruth';
+            var data = true;
+            $.sessionStorage.set(key, data);
+            $.localStorage.set(key, data);
+            assert.strictEqual($.sessionStorage.get(key), data);
+            assert.strictEqual($.localStorage.get(key), data);
+        });
+
+        QUnit.test('save & load a number', function(assert) {
+            var key = 'myNumber';
+            var data = 0;
+            $.sessionStorage.set(key, data);
+            $.localStorage.set(key, data);
+            assert.strictEqual($.sessionStorage.get(key), data);
+            assert.strictEqual($.localStorage.get(key), data);
+        });
+
+        QUnit.test('save & load a string', function(assert) {
+            var key = 'myText';
+            var data = 'theString';
+            $.sessionStorage.set(key, data);
+            $.localStorage.set(key, data);
+            assert.strictEqual($.sessionStorage.get(key), data);
+            assert.strictEqual($.localStorage.get(key), data);
+        });
+
+        QUnit.test('save & load an array', function(assert) {
+            var key = 'myList';
+            var data = [1,2,3];
+            $.sessionStorage.set(key, data);
+            $.localStorage.set(key, data);
+            assert.deepEqual($.sessionStorage.get(key), data);
+            assert.deepEqual($.localStorage.get(key), data);
+        });
+
+        QUnit.test('save & load an object', function(assert) {
+            var key = 'myObject';
+            var data = {foo:'bar'};
+            $.sessionStorage.set(key, data);
+            $.localStorage.set(key, data);
+            assert.deepEqual($.sessionStorage.get(key), data);
+            assert.deepEqual($.localStorage.get(key), data);
+        });
+
+        QUnit.test('save & load an object with namespace', function(assert) {
+            var ns = 'myNamespace';
+            var key = 'myObject';
+            var data = {foo:'bar'};
+            $.sessionStorage.set(ns, key, data);
+            $.localStorage.set(ns, key, data);
+            assert.deepEqual($.sessionStorage.get(ns, key), data);
+            assert.deepEqual($.localStorage.get(ns, key), data);
+        });
+
+        QUnit.test('delete data', function(assert) {
+            var key1 = 'myTruth1';
+            var key2 = 'myTruth2';
+            var data = false;
+            $.sessionStorage.set(key1, data);
+            $.sessionStorage.set(key2, data);
+            $.localStorage.set(key1, data);
+            $.localStorage.set(key2, data);
+            assert.strictEqual($.sessionStorage.get(key1), data);
+            assert.strictEqual($.sessionStorage.get(key2), data);
+            assert.strictEqual($.localStorage.get(key1), data);
+            assert.strictEqual($.localStorage.get(key2), data);
+            $.sessionStorage.del(key1);
+            $.localStorage.del(key1);
+            assert.strictEqual($.sessionStorage.get(key1), null);
+            assert.strictEqual($.localStorage.get(key1), null);
+            assert.strictEqual($.sessionStorage.get(key2), data);
+            assert.strictEqual($.localStorage.get(key2), data);
+        });
+
+        QUnit.test('delete data with namespace', function(assert) {
+            var ns = 'myNamespace';
+            var key1 = 'myTruth1';
+            var key2 = 'myTruth2';
+            var data = false;
+            $.sessionStorage.set(ns, key1, data);
+            $.sessionStorage.set(ns, key2, data);
+            $.localStorage.set(ns, key1, data);
+            $.localStorage.set(ns, key2, data);
+            assert.strictEqual($.sessionStorage.get(ns, key1), data);
+            assert.strictEqual($.sessionStorage.get(ns, key2), data);
+            assert.strictEqual($.localStorage.get(ns, key1), data);
+            assert.strictEqual($.localStorage.get(ns, key2), data);
+            $.sessionStorage.del(ns, key1);
+            $.localStorage.del(ns, key1);
+            assert.strictEqual($.sessionStorage.get(ns, key1), null);
+            assert.strictEqual($.localStorage.get(ns, key1), null);
+            assert.strictEqual($.sessionStorage.get(ns, key2), data);
+            assert.strictEqual($.localStorage.get(ns, key2), data);
+        });
+
+        QUnit.test('delete a namespace', function(assert) {
+            var ns1 = 'myNamespace1';
+            var ns2 = 'myNamespace2';
+            var key = 'myTruth';
+            var data = false;
+            $.sessionStorage.set(ns1, key, data);
+            $.sessionStorage.set(ns2, key, data);
+            $.localStorage.set(ns1, key, data);
+            $.localStorage.set(ns2, key, data);
+            assert.strictEqual($.sessionStorage.get(ns1, key), data);
+            assert.strictEqual($.sessionStorage.get(ns2, key), data);
+            assert.strictEqual($.localStorage.get(ns1, key), data);
+            assert.strictEqual($.localStorage.get(ns2, key), data);
+            $.sessionStorage.clear(ns1);
+            $.localStorage.clear(ns1);
+            assert.strictEqual($.sessionStorage.get(ns1, key), null);
+            assert.strictEqual($.localStorage.get(ns1, key), null);
+            assert.strictEqual($.sessionStorage.get(ns2, key), data);
+            assert.strictEqual($.localStorage.get(ns2, key), data);
+        });
+
+        QUnit.test('delete all', function(assert) {
+            var ns1 = 'myNamespace1';
+            var ns2 = 'myNamespace2';
+            var key = 'myTruth';
+            var data = false;
+            $.sessionStorage.set(ns1, key, data);
+            $.sessionStorage.set(ns2, key, data);
+            $.localStorage.set(ns1, key, data);
+            $.localStorage.set(ns2, key, data);
+            assert.strictEqual($.sessionStorage.get(ns1, key), data);
+            assert.strictEqual($.sessionStorage.get(ns2, key), data);
+            assert.strictEqual($.localStorage.get(ns1, key), data);
+            assert.strictEqual($.localStorage.get(ns2, key), data);
+            $.sessionStorage.clear();
+            $.localStorage.clear();
+            assert.strictEqual($.sessionStorage.get(ns1, key), null);
+            assert.strictEqual($.localStorage.get(ns1, key), null);
+            assert.strictEqual($.sessionStorage.get(ns2, key), null);
+            assert.strictEqual($.localStorage.get(ns2, key), null);
+        });
+    </script>
+</body>
+</html>

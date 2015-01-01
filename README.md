@@ -2,6 +2,7 @@ jquery-webstorage
 =================
 
 The goal of this plugin is to simplify the use of webstorages (further known as sessionStorage and localStorage):
+
 - you can store any kind of data types and don't care about conversion
 - you can use namespaces
 - you can use storage events across different tabs/windows (also on IE =)
@@ -17,6 +18,7 @@ Requirements
 
 Upcoming
 --------
+
 - Event handlers based on namespaces
 
 

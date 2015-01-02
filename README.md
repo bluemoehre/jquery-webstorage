@@ -11,7 +11,7 @@ The goal of this plugin is to simplify the use of webstorages (further known as 
 Requirements
 ------------
 
-- jQuery 1.4+
+- jQuery 1.7+
 - JSON-Support (nativly on Internet Explorer 8+, Firefox 3.1+, Safari 4+, Chrome 3+, Opera 10.5+)
 - Webstorage-Support (nativly on Internet Explorer 8+, Firefox 3.5+, Safari 4+, Chrome 4+, Opera 10.5+)
 

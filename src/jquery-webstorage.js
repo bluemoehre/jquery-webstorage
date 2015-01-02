@@ -343,14 +343,14 @@
         };
 
         // Catch native storage event and trigger the plug-in's ones
-        //$(win).on('storage', function (event) {
-        //    if (!isIeCrutch(event.originalEvent.key, event.originalEvent.newValue)) {
-        //        $.localStorage.trigger({
-        //            type: 'storage',
-        //            originalEvent: event.originalEvent
-        //        });
-        //    }
-        //});
+        $(win).on('storage', function(event){
+            if (!isIeCrutch(event.originalEvent.key, event.originalEvent.newValue)) {
+                $.localStorage.trigger({
+                    type: 'storage',
+                    originalEvent: event.originalEvent
+                });
+            }
+        });
 
     }
 
